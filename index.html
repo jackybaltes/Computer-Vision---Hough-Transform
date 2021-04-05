@@ -1,0 +1,801 @@
+<!doctype html>
+<html>
+    <head>
+        <meta charset="utf-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+
+        <title>Computer Vision - Hough Transform</title>
+
+        <link rel="stylesheet" href="css/reveal.css">
+        <link rel="stylesheet" href="css/theme/ntnuerc.css">
+
+        <!-- Theme used for syntax highlighting of code -->
+        <link rel="stylesheet" href="lib/css/zenburn.css">
+        <script src="https://daybrush.com/scenejs/release/latest/dist/scene.min.js"></script>
+		
+        <!-- Printing and PDF exports -->
+        <script>
+            var link = document.createElement( 'link' );
+            link.rel = 'stylesheet';
+            link.type = 'text/css';
+            link.href = window.location.search.match( /print-pdf/gi ) ? 'css/print/pdf.css' : 'css/print/paper.css';
+            document.getElementsByTagName( 'head' )[0].appendChild( link );
+        </script>
+        <script src="js/ntnu.js"></script>
+    </head>
+    <body>
+        <div class="reveal">
+        <div class="slides">
+            
+<section id="first" data-state="first">
+
+
+<!-- Header -->
+  
+
+<!-- Background -->
+
+
+<!-- Slide -->
+<div class="jb-slide">
+
+<div class="jb-output-code jb-render">
+
+<!-- start embedded style -->
+
+<!-- end embedded style -->
+<div class="jb-output jb-render">
+
+<h1> Computer Vision - Hough Transform</h1>
+
+   <div class="author" style="text-align:center;">
+    
+<p>
+      Jacky Baltes<br>
+      National Taiwan Normal University<br>
+      Taipei, Taiwan<br>
+      <a href="mailto:jacky.baltes@ntnu.edu.tw">jacky.baltes@ntnu.edu.tw</a><br>
+</p>
+
+   </div>
+</div><!-- end of jb-output jb-render -->
+</div><!-- end of jb-output-code jb-render -->
+
+
+</div>
+<!-- Footer -->
+
+<div class="jb-footer-left plain">
+    <span id="id-d20780d1-c0d3-42c3-8bbf-168c9061fb21" ><span id="id-d20780d1-c0d3-42c3-8bbf-168c9061fb21"><img id="img-id-d20780d1-c0d3-42c3-8bbf-168c9061fb21"     src="assets/images/logo.png"/></span>
+</span>
+
+</div>
+<div class="jb-footer-right plain">
+    <span id="id-f4cb7d1a-abd1-4d18-b71b-384070e74cdd" ><span id="id-f4cb7d1a-abd1-4d18-b71b-384070e74cdd"><img id="img-id-f4cb7d1a-abd1-4d18-b71b-384070e74cdd" width="162" height="138"   src="assets/images/robbi.png"/></span>
+</span>
+
+</div>
+
+<aside class="notes">
+
+</aside>
+
+
+
+</section>
+<section id="slide_00003_frag_00001" data-state="slide_00003_frag_00001">
+
+
+<!-- Header -->
+  
+
+<!-- Background -->
+
+
+<!-- Slide -->
+<div class="jb-slide">
+
+<div class="jb-output-code jb-render">
+
+<!-- start embedded style -->
+
+<!-- end embedded style -->
+<div class="jb-output jb-render">
+
+<h1>Hough Detection in OpenCV</h1>
+
+<div class="jb-text">
+Detection of lines and circles using the <a href="http://www.opencv.org/">OpenCV</a> vision library.
+</div>
+</div><!-- end of jb-output jb-render -->
+</div><!-- end of jb-output-code jb-render -->
+
+
+</div>
+<!-- Footer -->
+
+<div class="jb-footer-left plain">
+    <span id="id-500d82ef-245d-4d47-b1ba-dcc8627246d4" ><span id="id-500d82ef-245d-4d47-b1ba-dcc8627246d4"><img id="img-id-500d82ef-245d-4d47-b1ba-dcc8627246d4"     src="assets/images/logo.png"/></span>
+</span>
+
+</div>
+<div class="jb-footer-right plain">
+    <span id="id-e4093710-36b0-44f2-b854-8bd40f5065a5" ><span id="id-e4093710-36b0-44f2-b854-8bd40f5065a5"><img id="img-id-e4093710-36b0-44f2-b854-8bd40f5065a5" width="162" height="138"   src="assets/images/robbi.png"/></span>
+</span>
+
+</div>
+
+<aside class="notes">
+
+</aside>
+
+
+
+</section>
+<section id="slide_00004_frag_00001" data-state="slide_00004_frag_00001">
+
+
+<!-- Header -->
+  
+
+<!-- Background -->
+
+
+<!-- Slide -->
+<div class="jb-slide">
+<div class="jb-input jb-render jb-code" style="text-align:center">
+
+<!-- start embedded style -->
+
+<!-- end embedded style -->
+<div class="jb-input-code jb-render">
+<div class="highlight" style="background: #f8f8f8; color:#101010;display=inline-block;"><pre style="line-height: 125%"><span></span>url <span style="color: #666666">=</span> <span style="color: #BA2121">&quot;https://i.postimg.cc/3rBpv96M/image.png&quot;</span> <span style="color: #408080; font-style: italic">#@param {type:&quot;string&quot;}</span>
+img <span style="color: #666666">=</span> io<span style="color: #666666">.</span>imread( url )
+img <span style="color: #666666">=</span> cv2<span style="color: #666666">.</span>resize(img, (<span style="color: #666666">640</span>, <span style="color: #666666">480</span> ) )
+
+fig <span style="color: #666666">=</span> plt<span style="color: #666666">.</span>figure()
+ax1 <span style="color: #666666">=</span> fig<span style="color: #666666">.</span>add_subplot(<span style="color: #666666">1</span>,<span style="color: #666666">1</span>,<span style="color: #666666">1</span>)
+ax1<span style="color: #666666">.</span>set_title(<span style="color: #BA2121">&#39;Original Image&#39;</span>)
+
+ax1<span style="color: #666666">.</span>imshow(img, interpolation <span style="color: #666666">=</span> <span style="color: #BA2121">&#39;bicubic&#39;</span>)
+ax1<span style="color: #666666">.</span>set_xticks([])
+ax1<span style="color: #666666">.</span>set_yticks([])
+
+imgOrig <span style="color: #666666">=</span> addJBFigure(<span style="color: #BA2121">&quot;imgOrig&quot;</span>, <span style="color: #666666">0</span>, <span style="color: #666666">0</span>, fig )
+plt<span style="color: #666666">.</span>close()
+</pre></div>
+
+</div><!-- end of jb-input-code jb-render -->
+
+</div>
+
+</div>
+<!-- Footer -->
+
+<div class="jb-footer-left plain">
+    <span id="id-5752288c-9fa3-4e17-9285-7469dd943fdf" ><span id="id-5752288c-9fa3-4e17-9285-7469dd943fdf"><img id="img-id-5752288c-9fa3-4e17-9285-7469dd943fdf"     src="assets/images/logo.png"/></span>
+</span>
+
+</div>
+<div class="jb-footer-right plain">
+    <span id="id-ef2570d2-0ab7-4500-98ef-7d5000f68e60" ><span id="id-ef2570d2-0ab7-4500-98ef-7d5000f68e60"><img id="img-id-ef2570d2-0ab7-4500-98ef-7d5000f68e60" width="162" height="138"   src="assets/images/robbi.png"/></span>
+</span>
+
+</div>
+
+<aside class="notes">
+
+</aside>
+
+
+
+</section>
+<section id="slide_00005_frag_00001" data-state="slide_00005_frag_00001">
+
+
+<!-- Header -->
+  
+
+<!-- Background -->
+
+
+<!-- Slide -->
+<div class="jb-slide">
+
+<div class="jb-output-code jb-render">
+
+<!-- start embedded style -->
+
+<!-- end embedded style -->
+<div class="jb-output jb-render">
+
+<h1>Input Image</h1>
+
+<span id="id-4822fee7-5e8c-448d-8a9a-78ede629cdb0" ><span id="id-4822fee7-5e8c-448d-8a9a-78ede629cdb0"><img id="img-id-4822fee7-5e8c-448d-8a9a-78ede629cdb0"     src="assets/images/imgOrig.svg"/></span>
+</span>
+</div><!-- end of jb-output jb-render -->
+</div><!-- end of jb-output-code jb-render -->
+
+
+</div>
+<!-- Footer -->
+
+<div class="jb-footer-left plain">
+    <span id="id-6a97cb72-0a20-48e1-8c75-ad1534021532" ><span id="id-6a97cb72-0a20-48e1-8c75-ad1534021532"><img id="img-id-6a97cb72-0a20-48e1-8c75-ad1534021532"     src="assets/images/logo.png"/></span>
+</span>
+
+</div>
+<div class="jb-footer-right plain">
+    <span id="id-65b8875e-ab38-4f67-917e-145c972acdc6" ><span id="id-65b8875e-ab38-4f67-917e-145c972acdc6"><img id="img-id-65b8875e-ab38-4f67-917e-145c972acdc6" width="162" height="138"   src="assets/images/robbi.png"/></span>
+</span>
+
+</div>
+
+<aside class="notes">
+
+</aside>
+
+
+
+</section>
+<section id="slide_00006_frag_00001" data-state="slide_00006_frag_00001">
+
+
+<!-- Header -->
+  
+
+<!-- Background -->
+
+
+<!-- Slide -->
+<div class="jb-slide">
+<div class="jb-input jb-render jb-code" style="text-align:center">
+
+<!-- start embedded style -->
+
+<!-- end embedded style -->
+<div class="jb-input-code jb-render">
+<div class="highlight" style="background: #f8f8f8; color:#101010;display=inline-block;"><pre style="line-height: 125%"><span></span>kernel <span style="color: #666666">=</span> <span style="color: #666666">7</span> <span style="color: #408080; font-style: italic">#@param [&quot;3&quot;, &quot;5&quot;, &quot;7&quot;, &quot;9&quot;, &quot;11&quot;] {type:&quot;raw&quot;}</span>
+fig <span style="color: #666666">=</span> plt<span style="color: #666666">.</span>figure()
+ax1 <span style="color: #666666">=</span> fig<span style="color: #666666">.</span>add_subplot(<span style="color: #666666">1</span>,<span style="color: #666666">1</span>,<span style="color: #666666">1</span>)
+ax1<span style="color: #666666">.</span>set_title(<span style="color: #BA2121">&#39;Original Image&#39;</span>)
+
+
+gray <span style="color: #666666">=</span> cv2<span style="color: #666666">.</span>cvtColor( img,  cv2<span style="color: #666666">.</span>COLOR_RGB2GRAY );
+
+ax1<span style="color: #666666">.</span>imshow(gray, cmap<span style="color: #666666">=</span><span style="color: #BA2121">&#39;gray&#39;</span>, interpolation <span style="color: #666666">=</span> <span style="color: #BA2121">&#39;bicubic&#39;</span>)
+ax1<span style="color: #666666">.</span>set_xticks([])
+ax1<span style="color: #666666">.</span>set_yticks([])
+
+imgGray <span style="color: #666666">=</span> addJBFigure( <span style="color: #BA2121">&quot;imgGray&quot;</span>, <span style="color: #666666">0</span>, <span style="color: #666666">0</span>, fig )
+plt<span style="color: #666666">.</span>close()
+</pre></div>
+
+</div><!-- end of jb-input-code jb-render -->
+
+</div>
+
+</div>
+<!-- Footer -->
+
+<div class="jb-footer-left plain">
+    <span id="id-899365d4-22c5-483c-848d-11f304340102" ><span id="id-899365d4-22c5-483c-848d-11f304340102"><img id="img-id-899365d4-22c5-483c-848d-11f304340102"     src="assets/images/logo.png"/></span>
+</span>
+
+</div>
+<div class="jb-footer-right plain">
+    <span id="id-89df347f-7084-4491-a608-18ab58d0c4fd" ><span id="id-89df347f-7084-4491-a608-18ab58d0c4fd"><img id="img-id-89df347f-7084-4491-a608-18ab58d0c4fd" width="162" height="138"   src="assets/images/robbi.png"/></span>
+</span>
+
+</div>
+
+<aside class="notes">
+
+</aside>
+
+
+
+</section>
+<section id="slide_00007_frag_00001" data-state="slide_00007_frag_00001">
+
+
+<!-- Header -->
+  
+
+<!-- Background -->
+
+
+<!-- Slide -->
+<div class="jb-slide">
+
+<div class="jb-output-code jb-render">
+
+<!-- start embedded style -->
+
+<!-- end embedded style -->
+<div class="jb-output jb-render">
+
+<h1>Input Image</h1>
+
+<span id="id-332c7690-d050-4d87-b788-d5d6f2e163cd" ><span id="id-332c7690-d050-4d87-b788-d5d6f2e163cd"><img id="img-id-332c7690-d050-4d87-b788-d5d6f2e163cd"     src="assets/images/imgGray.svg"/></span>
+</span>
+</div><!-- end of jb-output jb-render -->
+</div><!-- end of jb-output-code jb-render -->
+
+
+</div>
+<!-- Footer -->
+
+<div class="jb-footer-left plain">
+    <span id="id-0c60e38d-69dd-4b2c-93b2-49b62f7c413c" ><span id="id-0c60e38d-69dd-4b2c-93b2-49b62f7c413c"><img id="img-id-0c60e38d-69dd-4b2c-93b2-49b62f7c413c"     src="assets/images/logo.png"/></span>
+</span>
+
+</div>
+<div class="jb-footer-right plain">
+    <span id="id-75316f13-b53a-4103-be70-a37d96884b45" ><span id="id-75316f13-b53a-4103-be70-a37d96884b45"><img id="img-id-75316f13-b53a-4103-be70-a37d96884b45" width="162" height="138"   src="assets/images/robbi.png"/></span>
+</span>
+
+</div>
+
+<aside class="notes">
+
+</aside>
+
+
+
+</section>
+<section id="slide_00008_frag_00001" data-state="slide_00008_frag_00001">
+
+
+<!-- Header -->
+  
+
+<!-- Background -->
+
+
+<!-- Slide -->
+<div class="jb-slide">
+<div class="jb-input jb-render jb-code" style="text-align:center">
+
+<!-- start embedded style -->
+
+<!-- end embedded style -->
+<div class="jb-input-code jb-render">
+<div class="highlight" style="background: #f8f8f8; color:#101010;display=inline-block;"><pre style="line-height: 125%"><span></span>canny <span style="color: #666666">=</span> cv2<span style="color: #666666">.</span>Canny( img, <span style="color: #666666">100</span>, <span style="color: #666666">300</span>, <span style="color: #666666">3</span> )
+
+fig <span style="color: #666666">=</span> plt<span style="color: #666666">.</span>figure()
+ax <span style="color: #666666">=</span> fig<span style="color: #666666">.</span>add_subplot(<span style="color: #666666">1</span>,<span style="color: #666666">1</span>,<span style="color: #666666">1</span>)
+ax<span style="color: #666666">.</span>set_title(<span style="color: #BA2121">&#39;Canny&#39;</span>)
+ax<span style="color: #666666">.</span>set_xticks([])
+ax<span style="color: #666666">.</span>set_yticks([])
+
+ax<span style="color: #666666">.</span>imshow( canny, cmap <span style="color: #666666">=</span> <span style="color: #BA2121">&#39;gray&#39;</span>)
+
+imgEdge <span style="color: #666666">=</span> addJBFigure(<span style="color: #BA2121">&quot;imgEdge&quot;</span>, <span style="color: #666666">0</span>, <span style="color: #666666">0</span>, fig )
+
+plt<span style="color: #666666">.</span>close()
+</pre></div>
+
+</div><!-- end of jb-input-code jb-render -->
+
+</div>
+
+</div>
+<!-- Footer -->
+
+<div class="jb-footer-left plain">
+    <span id="id-0d3f2693-745c-444c-8782-7ab5b73f6670" ><span id="id-0d3f2693-745c-444c-8782-7ab5b73f6670"><img id="img-id-0d3f2693-745c-444c-8782-7ab5b73f6670"     src="assets/images/logo.png"/></span>
+</span>
+
+</div>
+<div class="jb-footer-right plain">
+    <span id="id-48e076c9-51c8-4053-90c6-6d5eb388779c" ><span id="id-48e076c9-51c8-4053-90c6-6d5eb388779c"><img id="img-id-48e076c9-51c8-4053-90c6-6d5eb388779c" width="162" height="138"   src="assets/images/robbi.png"/></span>
+</span>
+
+</div>
+
+<aside class="notes">
+
+</aside>
+
+
+
+</section>
+<section id="slide_00009_frag_00001" data-state="slide_00009_frag_00001">
+
+
+<!-- Header -->
+  
+
+<!-- Background -->
+
+
+<!-- Slide -->
+<div class="jb-slide">
+
+<div class="jb-output-code jb-render">
+
+<!-- start embedded style -->
+
+<!-- end embedded style -->
+<div class="jb-output jb-render">
+
+<h1>Canny Edge Detection</h1>
+
+<span id="id-2a284f1d-357a-40c5-97a1-9ee63e0470ef" ><span id="id-2a284f1d-357a-40c5-97a1-9ee63e0470ef"><img id="img-id-2a284f1d-357a-40c5-97a1-9ee63e0470ef"     src="assets/images/imgEdge.svg"/></span>
+</span>
+</div><!-- end of jb-output jb-render -->
+</div><!-- end of jb-output-code jb-render -->
+
+
+</div>
+<!-- Footer -->
+
+<div class="jb-footer-left plain">
+    <span id="id-b7439aa4-9cff-455c-9e37-442bdfe7247a" ><span id="id-b7439aa4-9cff-455c-9e37-442bdfe7247a"><img id="img-id-b7439aa4-9cff-455c-9e37-442bdfe7247a"     src="assets/images/logo.png"/></span>
+</span>
+
+</div>
+<div class="jb-footer-right plain">
+    <span id="id-159b5954-fba7-432f-844f-725e1aeab592" ><span id="id-159b5954-fba7-432f-844f-725e1aeab592"><img id="img-id-159b5954-fba7-432f-844f-725e1aeab592" width="162" height="138"   src="assets/images/robbi.png"/></span>
+</span>
+
+</div>
+
+<aside class="notes">
+
+</aside>
+
+
+
+</section>
+<section id="slide_00010_frag_00001" data-state="slide_00010_frag_00001">
+
+
+<!-- Header -->
+  
+
+<!-- Background -->
+
+
+<!-- Slide -->
+<div class="jb-slide">
+<div class="jb-input jb-render jb-code" style="text-align:center">
+
+<!-- start embedded style -->
+
+<!-- end embedded style -->
+<div class="jb-input-code jb-render">
+<div class="highlight" style="background: #f8f8f8; color:#101010;display=inline-block;"><pre style="line-height: 125%"><span></span>draw <span style="color: #666666">=</span> img<span style="color: #666666">.</span>copy()
+
+rhoAccuracy <span style="color: #666666">=</span> <span style="color: #666666">2</span>
+thetaAccuracy <span style="color: #666666">=</span> np<span style="color: #666666">.</span>pi<span style="color: #666666">/180.0</span>
+minVotes <span style="color: #666666">=</span> <span style="color: #666666">200</span>
+
+lines <span style="color: #666666">=</span> cv2<span style="color: #666666">.</span>HoughLines( canny, rhoAccuracy, thetaAccuracy, minVotes)
+<span style="color: #008000; font-weight: bold">if</span> ( lines <span style="color: #AA22FF; font-weight: bold">is</span> <span style="color: #AA22FF; font-weight: bold">not</span> <span style="color: #008000; font-weight: bold">None</span> ):
+  <span style="color: #008000">print</span>(<span style="color: #BA2121">&quot;Number of lines found&quot;</span>, <span style="color: #008000">len</span>(lines))
+  <span style="color: #008000; font-weight: bold">for</span> line <span style="color: #AA22FF; font-weight: bold">in</span> lines:
+    <span style="color: #008000; font-weight: bold">for</span> rho,theta <span style="color: #AA22FF; font-weight: bold">in</span> line:
+      a <span style="color: #666666">=</span> np<span style="color: #666666">.</span>cos(theta)
+      b <span style="color: #666666">=</span> np<span style="color: #666666">.</span>sin(theta)
+      x0 <span style="color: #666666">=</span> a<span style="color: #666666">*</span>rho
+      y0 <span style="color: #666666">=</span> b<span style="color: #666666">*</span>rho
+      x1 <span style="color: #666666">=</span> <span style="color: #008000">int</span>(x0 <span style="color: #666666">+</span> <span style="color: #666666">1000*</span>(<span style="color: #666666">-</span>b))
+      y1 <span style="color: #666666">=</span> <span style="color: #008000">int</span>(y0 <span style="color: #666666">+</span> <span style="color: #666666">1000*</span>(a))
+      x2 <span style="color: #666666">=</span> <span style="color: #008000">int</span>(x0 <span style="color: #666666">-</span> <span style="color: #666666">1000*</span>(<span style="color: #666666">-</span>b))
+      y2 <span style="color: #666666">=</span> <span style="color: #008000">int</span>(y0 <span style="color: #666666">-</span> <span style="color: #666666">1000*</span>(a))
+
+      cv2<span style="color: #666666">.</span>line(draw,(x1,y1),(x2,y2),(<span style="color: #666666">0</span>,<span style="color: #666666">0</span>,<span style="color: #666666">255</span>),<span style="color: #666666">2</span>)
+    
+fig <span style="color: #666666">=</span> plt<span style="color: #666666">.</span>figure()
+ax <span style="color: #666666">=</span> fig<span style="color: #666666">.</span>add_subplot(<span style="color: #666666">1</span>,<span style="color: #666666">1</span>,<span style="color: #666666">1</span>)
+ax<span style="color: #666666">.</span>set_title(<span style="color: #BA2121">&#39;Hough Lines&#39;</span>)
+ax<span style="color: #666666">.</span>set_xticks([])
+ax<span style="color: #666666">.</span>set_yticks([])
+
+ax<span style="color: #666666">.</span>imshow( draw, cmap <span style="color: #666666">=</span> <span style="color: #BA2121">&#39;gray&#39;</span>)
+
+imgLinesH <span style="color: #666666">=</span> addJBFigure(<span style="color: #BA2121">&quot;imgLinesH&quot;</span>, <span style="color: #666666">0</span>, <span style="color: #666666">0</span>, fig )
+plt<span style="color: #666666">.</span>close()
+</pre></div>
+
+</div><!-- end of jb-input-code jb-render -->
+
+</div>
+<div class="jb-print jb-render">
+<div class="jb-output jb-render code" style="text-align:center">
+<div class="jb-stdout code" style="display:inline-block; width:90%">
+<pre >
+Number of lines found 44
+</pre>
+</div>
+</div>
+
+</div><!-- end of jb-print jb-render -->
+
+</div>
+<!-- Footer -->
+
+<div class="jb-footer-left plain">
+    <span id="id-de30c5d1-0554-4a0a-b27a-e14dae8eac28" ><span id="id-de30c5d1-0554-4a0a-b27a-e14dae8eac28"><img id="img-id-de30c5d1-0554-4a0a-b27a-e14dae8eac28"     src="assets/images/logo.png"/></span>
+</span>
+
+</div>
+<div class="jb-footer-right plain">
+    <span id="id-76e43f2b-7aa5-4d62-a0f9-4caa18901b0b" ><span id="id-76e43f2b-7aa5-4d62-a0f9-4caa18901b0b"><img id="img-id-76e43f2b-7aa5-4d62-a0f9-4caa18901b0b" width="162" height="138"   src="assets/images/robbi.png"/></span>
+</span>
+
+</div>
+
+<aside class="notes">
+
+</aside>
+
+
+
+</section>
+<section id="slide_00011_frag_00001" data-state="slide_00011_frag_00001">
+
+
+<!-- Header -->
+  
+
+<!-- Background -->
+
+
+<!-- Slide -->
+<div class="jb-slide">
+
+<div class="jb-output-code jb-render">
+
+<!-- start embedded style -->
+
+<!-- end embedded style -->
+<div class="jb-output jb-render">
+
+<h1>Hough Lines Output</h1>
+
+<span id="id-df28690e-ae04-4e7b-a108-1970607b15a7" ><span id="id-df28690e-ae04-4e7b-a108-1970607b15a7"><img id="img-id-df28690e-ae04-4e7b-a108-1970607b15a7"     src="assets/images/imgLinesH.svg"/></span>
+</span>
+</div><!-- end of jb-output jb-render -->
+</div><!-- end of jb-output-code jb-render -->
+
+
+</div>
+<!-- Footer -->
+
+<div class="jb-footer-left plain">
+    <span id="id-6018d874-9ea5-4054-9cbf-de5c4359a1d4" ><span id="id-6018d874-9ea5-4054-9cbf-de5c4359a1d4"><img id="img-id-6018d874-9ea5-4054-9cbf-de5c4359a1d4"     src="assets/images/logo.png"/></span>
+</span>
+
+</div>
+<div class="jb-footer-right plain">
+    <span id="id-7132f81f-1daa-48fc-be04-46c4c88af425" ><span id="id-7132f81f-1daa-48fc-be04-46c4c88af425"><img id="img-id-7132f81f-1daa-48fc-be04-46c4c88af425" width="162" height="138"   src="assets/images/robbi.png"/></span>
+</span>
+
+</div>
+
+<aside class="notes">
+
+</aside>
+
+
+
+</section>
+<section id="slide_00012_frag_00001" data-state="slide_00012_frag_00001">
+
+
+<!-- Header -->
+  
+
+<!-- Background -->
+
+
+<!-- Slide -->
+<div class="jb-slide">
+<div class="jb-input jb-render jb-code" style="text-align:center">
+
+<!-- start embedded style -->
+
+<!-- end embedded style -->
+<div class="jb-input-code jb-render">
+<div class="highlight" style="background: #f8f8f8; color:#101010;display=inline-block;"><pre style="line-height: 125%"><span></span>draw <span style="color: #666666">=</span> img<span style="color: #666666">.</span>copy()
+
+rhoAccuracy <span style="color: #666666">=</span> <span style="color: #666666">5</span>
+thetaAccuracy <span style="color: #666666">=</span> np<span style="color: #666666">.</span>pi<span style="color: #666666">/45.0</span>
+minVotes <span style="color: #666666">=</span> <span style="color: #666666">400</span>
+minLineLength <span style="color: #666666">=</span> <span style="color: #666666">300</span>
+maxLineGap <span style="color: #666666">=</span> <span style="color: #666666">0</span>
+
+lines <span style="color: #666666">=</span> cv2<span style="color: #666666">.</span>HoughLinesP( canny, rhoAccuracy, thetaAccuracy, minVotes, minLineLength, maxLineGap)
+<span style="color: #008000; font-weight: bold">if</span> ( lines <span style="color: #AA22FF; font-weight: bold">is</span> <span style="color: #AA22FF; font-weight: bold">not</span> <span style="color: #008000; font-weight: bold">None</span> ):
+  <span style="color: #008000">print</span>(<span style="color: #BA2121">&quot;Found number of lines&quot;</span>, <span style="color: #008000">len</span>(lines) )
+  <span style="color: #008000; font-weight: bold">for</span> line <span style="color: #AA22FF; font-weight: bold">in</span> lines:
+    <span style="color: #008000; font-weight: bold">for</span> x1,y1,x2,y2 <span style="color: #AA22FF; font-weight: bold">in</span> line:
+      cv2<span style="color: #666666">.</span>line(draw,(x1,y1),(x2,y2),(<span style="color: #666666">0</span>,<span style="color: #666666">0</span>,<span style="color: #666666">255</span>),<span style="color: #666666">2</span>)
+    
+fig <span style="color: #666666">=</span> plt<span style="color: #666666">.</span>figure()
+ax <span style="color: #666666">=</span> fig<span style="color: #666666">.</span>add_subplot(<span style="color: #666666">1</span>,<span style="color: #666666">1</span>,<span style="color: #666666">1</span>)
+ax<span style="color: #666666">.</span>set_title(<span style="color: #BA2121">&#39;Hough Lines&#39;</span>)
+ax<span style="color: #666666">.</span>set_xticks([])
+ax<span style="color: #666666">.</span>set_yticks([])
+
+ax<span style="color: #666666">.</span>imshow( draw, cmap <span style="color: #666666">=</span> <span style="color: #BA2121">&#39;gray&#39;</span>)
+
+imgLinesP <span style="color: #666666">=</span> addJBFigure( <span style="color: #BA2121">&quot;imgLinesP&quot;</span>, <span style="color: #666666">0</span>, <span style="color: #666666">0</span>, fig)
+plt<span style="color: #666666">.</span>close()
+</pre></div>
+
+</div><!-- end of jb-input-code jb-render -->
+
+</div>
+<div class="jb-print jb-render">
+<div class="jb-output jb-render code" style="text-align:center">
+<div class="jb-stdout code" style="display:inline-block; width:90%">
+<pre >
+Found number of lines 222
+</pre>
+</div>
+</div>
+
+</div><!-- end of jb-print jb-render -->
+
+</div>
+<!-- Footer -->
+
+<div class="jb-footer-left plain">
+    <span id="id-e6ccd72e-8595-4bf2-b1ba-6acd3f063483" ><span id="id-e6ccd72e-8595-4bf2-b1ba-6acd3f063483"><img id="img-id-e6ccd72e-8595-4bf2-b1ba-6acd3f063483"     src="assets/images/logo.png"/></span>
+</span>
+
+</div>
+<div class="jb-footer-right plain">
+    <span id="id-a8328cf8-c72e-466d-818c-68595a00c942" ><span id="id-a8328cf8-c72e-466d-818c-68595a00c942"><img id="img-id-a8328cf8-c72e-466d-818c-68595a00c942" width="162" height="138"   src="assets/images/robbi.png"/></span>
+</span>
+
+</div>
+
+<aside class="notes">
+
+</aside>
+
+
+
+</section>
+<section id="slide_00013_frag_00001" data-state="slide_00013_frag_00001">
+
+
+<!-- Header -->
+  
+
+<!-- Background -->
+
+
+<!-- Slide -->
+<div class="jb-slide">
+
+<div class="jb-output-code jb-render">
+
+<!-- start embedded style -->
+
+<!-- end embedded style -->
+<div class="jb-output jb-render">
+
+<h1>Probabilistic Hough Line Segements using <code>HoughLinesP</code></h1>
+
+<span id="id-4485c8ff-c1ea-4282-b45c-930d36ac99fe" ><span id="id-4485c8ff-c1ea-4282-b45c-930d36ac99fe"><img id="img-id-4485c8ff-c1ea-4282-b45c-930d36ac99fe"     src="assets/images/imgLinesP.svg"/></span>
+</span>
+</div><!-- end of jb-output jb-render -->
+</div><!-- end of jb-output-code jb-render -->
+
+
+</div>
+<!-- Footer -->
+
+<div class="jb-footer-left plain">
+    <span id="id-b244fe92-b48f-4b44-acbc-e18524978d00" ><span id="id-b244fe92-b48f-4b44-acbc-e18524978d00"><img id="img-id-b244fe92-b48f-4b44-acbc-e18524978d00"     src="assets/images/logo.png"/></span>
+</span>
+
+</div>
+<div class="jb-footer-right plain">
+    <span id="id-602ad697-c8a4-450a-a2ff-063a962137e0" ><span id="id-602ad697-c8a4-450a-a2ff-063a962137e0"><img id="img-id-602ad697-c8a4-450a-a2ff-063a962137e0" width="162" height="138"   src="assets/images/robbi.png"/></span>
+</span>
+
+</div>
+
+<aside class="notes">
+
+</aside>
+
+
+
+</section>
+        </div>
+        </div>
+
+        <script src="js/reveal.js"></script>
+
+        <script>
+            // More info about config & dependencies:
+            // - https://github.com/hakimel/reveal.js#configuration
+            // - https://github.com/hakimel/reveal.js#dependencies
+            Reveal.initialize({
+                math: {
+                    mathjax: 'https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.0/MathJax.js',
+                    config: 'TeX-AMS_HTML-full',  // See http://docs.mathjax.org/en/latest/config-files.html
+                    // tex2jax: {
+                    //     inlineMath: [['$', '$'], ['\(', '\)']],
+                    //     displayMath: [['$$', '$$'], ['\[', '\]']],
+                    //     processEscapes: true,
+                    //     processEnvironments: true,
+                    //     skipTags: ['script', 'noscript', 'style', 'textarea', 'code', 'pre'],
+                    //     displayAlign: 'center',
+                    // }                
+                },
+                dependencies: [
+                    { src: 'plugin/markdown/marked.js' },
+                    { src: 'plugin/markdown/markdown.js' },
+                    { src: 'plugin/notes/notes.js', async: true },
+                    { src: 'plugin/highlight/highlight.js', async: true, callback: function() { hljs.initHighlightingOnLoad(); } },
+                    { src: 'plugin/math/math.js', async: true }
+                ]
+            });
+        </script>
+
+        <script>
+            <!-- Assets -->
+var assets = {
+"robbi" : new JBImage( "robbi", "12677", "162", "138", null, null, "assets/images/robbi", "png" ),
+"logo" : new JBImage( "logo", "12033", "0", "0", null, null, "assets/images/logo", "png" ),
+"fira-logo-1" : new JBImage( "fira-logo-1", "93836", "0", "0", null, null, "assets/images/FIRA-logo-1", "png" ),
+"pairLogo" : new JBImage( "pairLogo", "63051", "0", "0", null, null, "assets/images/pairLogo", "png" ),
+"imgOrig" : new JBImage( "imgOrig", "1368999", "0", "0", null, null, "assets/images/imgOrig", "svg" ),
+"imgGray" : new JBImage( "imgGray", "708999", "0", "0", null, null, "assets/images/imgGray", "svg" ),
+"imgEdge" : new JBImage( "imgEdge", "305151", "0", "0", null, null, "assets/images/imgEdge", "svg" ),
+"imgLinesH" : new JBImage( "imgLinesH", "1495878", "0", "0", null, null, "assets/images/imgLinesH", "svg" ),
+"imgLinesP" : new JBImage( "imgLinesP", "1577934", "0", "0", null, null, "assets/images/imgLinesP", "svg" ) 
+};
+var assetInstances = {
+    "id-f4cb7d1a-abd1-4d18-b71b-384070e74cdd": assets["robbi"],
+    "id-e4093710-36b0-44f2-b854-8bd40f5065a5": assets["robbi"],
+    "id-ef2570d2-0ab7-4500-98ef-7d5000f68e60": assets["robbi"],
+    "id-65b8875e-ab38-4f67-917e-145c972acdc6": assets["robbi"],
+    "id-89df347f-7084-4491-a608-18ab58d0c4fd": assets["robbi"],
+    "id-75316f13-b53a-4103-be70-a37d96884b45": assets["robbi"],
+    "id-48e076c9-51c8-4053-90c6-6d5eb388779c": assets["robbi"],
+    "id-159b5954-fba7-432f-844f-725e1aeab592": assets["robbi"],
+    "id-76e43f2b-7aa5-4d62-a0f9-4caa18901b0b": assets["robbi"],
+    "id-7132f81f-1daa-48fc-be04-46c4c88af425": assets["robbi"],
+    "id-a8328cf8-c72e-466d-818c-68595a00c942": assets["robbi"],
+    "id-602ad697-c8a4-450a-a2ff-063a962137e0": assets["robbi"],
+    "id-d20780d1-c0d3-42c3-8bbf-168c9061fb21": assets["logo"],
+    "id-500d82ef-245d-4d47-b1ba-dcc8627246d4": assets["logo"],
+    "id-5752288c-9fa3-4e17-9285-7469dd943fdf": assets["logo"],
+    "id-6a97cb72-0a20-48e1-8c75-ad1534021532": assets["logo"],
+    "id-899365d4-22c5-483c-848d-11f304340102": assets["logo"],
+    "id-0c60e38d-69dd-4b2c-93b2-49b62f7c413c": assets["logo"],
+    "id-0d3f2693-745c-444c-8782-7ab5b73f6670": assets["logo"],
+    "id-b7439aa4-9cff-455c-9e37-442bdfe7247a": assets["logo"],
+    "id-de30c5d1-0554-4a0a-b27a-e14dae8eac28": assets["logo"],
+    "id-6018d874-9ea5-4054-9cbf-de5c4359a1d4": assets["logo"],
+    "id-e6ccd72e-8595-4bf2-b1ba-6acd3f063483": assets["logo"],
+    "id-b244fe92-b48f-4b44-acbc-e18524978d00": assets["logo"],
+    "id-4822fee7-5e8c-448d-8a9a-78ede629cdb0": assets["imgOrig"],
+    "id-332c7690-d050-4d87-b788-d5d6f2e163cd": assets["imgGray"],
+    "id-2a284f1d-357a-40c5-97a1-9ee63e0470ef": assets["imgEdge"],
+    "id-df28690e-ae04-4e7b-a108-1970607b15a7": assets["imgLinesH"],
+    "id-4485c8ff-c1ea-4282-b45c-930d36ac99fe": assets["imgLinesP"]
+};
+<!-- End of Assets -->
+
+            convertURLs(assetInstances, "smart-path");
+        </script>
+        <script>
+            <!-- Characters -->
+var characters =
+{};
+<!-- End of Characters -->
+
+        </script>
+    </body>
+</html>
